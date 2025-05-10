@@ -1,0 +1,31 @@
+name: Deploy API to VM
+
+on:
+  push:
+    branches:
+      - main  # Trigger the deployment when code is pushed to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.VM_SSH_KEY }}
+
+    - name: Copy code to VM
+      run: |
+        scp -o StrictHostKeyChecking=no -r ./ azureuser@172.203.250.109:/home/azureuser/sayHello-api
+
+    - name: SSH into VM and deploy
+      run: |
+        ssh -o StrictHostKeyChecking=no azureuser@172.203.250.109 << EOF
+          cd /home/azureuser/sayHello-api
+          npm install
+          npm start
+        EOF
